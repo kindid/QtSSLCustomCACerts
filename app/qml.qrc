@@ -1,0 +1,7 @@
+<RCC>
+    <qresource prefix="/">
+        <file>main.qml</file>
+        <file>Top.qml</file>
+        <file>cert/dummycom_root_ca.pem</file>
+    </qresource>
+</RCC>

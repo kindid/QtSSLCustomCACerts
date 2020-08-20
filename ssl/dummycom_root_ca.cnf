@@ -1,0 +1,17 @@
+[ req ]
+distinguished_name = req_distinguished_name
+req_extensions = v3_req_ca
+prompt = no
+[ v3_req_ca ]
+basicConstraints = critical,CA:TRUE
+keyUsage = critical,cRLSign,keyCertSign
+subjectKeyIdentifier=hash
+extendedKeyUsage = critical,serverAuth,clientAuth
+authorityKeyIdentifier=keyid:always,issuer:always
+[ req_distinguished_name ]
+C = BB
+ST = COUNTYSHIRE
+L = TOWNSVILLE
+O = dummycom
+OU = net
+CN = dummy.com
