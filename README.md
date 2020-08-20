@@ -11,15 +11,17 @@
 1. Use certificate siging so that our apps and services can trust a broad range of our own services hosted on different servers etc
 1. Be in control of the chain of trust
 1. Save some money due to not having to pay for certificate signing/renewal
+1. Learn something
 
 ## Concepts
 
-We will establish a secure connect 
-Something about *why* we do this. Secure channel, validation of end points (srver, apps etc)
+We will explore trust, certificates, certification authorities, secure & validated connections from apps to our data sources (with Qt) and more
 
-Secure communications and the trusting of sources are done using a collection of certificates. We will use our own root certificate to validate our own connections (see Root CA)
+Secure communications and the trusting of sources are done using a collection of certificates.
 
-### Android Specifics
+We will use our own root certificate to validate our own connections (see Root CA)
+
+## Android Specifics
 
 For Android we will be using the Android build of the OpenSSL libraries from KDAB (build them yourself if you're really paranoid). AFAICT this is just an implementation of SSL and I'm not sure Android makes any further hardening restrictions on connections. This is available, pre-built at https://github.com/KDAB/android_openssl.git
 
@@ -27,7 +29,7 @@ If you don't trust those binaries then you can build them yourself. Instructions
 
 Simply run `git clone https://github.com/KDAB/android_openssl.git` in the root folder of this project.
 
-### macOS/iOS specifics
+## macOS/iOS specifics
 
 For iOS/macOS the underlying mechanism is SecureTransport. This has additional hardening measures that we need to work with. Example - We can't use "CN" for domain validation and instead have to use "SAN" (more later). This, I believe, means we need a V3 x509 certificate instead of the default OpenSSL generate V1 certificate (again, more later). Mac/iOS also require AKI and EKU (I believe).
 
@@ -35,7 +37,7 @@ For iOS/macOS the underlying mechanism is SecureTransport. This has additional h
 
 ## Root CA
 
-A Root Certificate is used to sign other certificates. As with all certificates it comes in 3 parts. 
+A Root Certificate is used to sign other certificates. As with all certificates it comes in 3 parts. In this project we will become our own certification authority.
 
 1. A key which is just a big blob of unpredictable random bits
 1. A password used to secure the key - this is known only to "us" and needn't be store on the computer much like the PIN number for a bank card or an unlock code on a phone
