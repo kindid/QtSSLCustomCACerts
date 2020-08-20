@@ -75,23 +75,27 @@ Secondly generate a root signing certificate using the key generated above (agai
 
 In the command line given the file `dummycom_root_ca.cnf` is referenced. This contains the V3 extensions we need amongst other things.
 
-`[ req ]
+```
+[ req ]
 distinguished_name = req_distinguished_name
 req_extensions = v3_req_ca
 prompt = no
+
 [ v3_req_ca ]
 basicConstraints = critical,CA:TRUE
 keyUsage = critical,cRLSign,keyCertSign
 subjectKeyIdentifier=hash
 extendedKeyUsage = serverAuth,clientAuth
 authorityKeyIdentifier=keyid:always,issuer:always
+
 [ req_distinguished_name ]
 C = BB
 ST = COUNTYSHIRE
 L = TOWNSVILLE
 O = dummycom
 OU = net
-CN = dummy.com`
+CN = dummy.com
+```
 
 The really, really important parts of this configuration file are `basicConstraints` and `extendedKeyUsage`. If we don't get this right then Secure Transport will *reject* your RC.
 
@@ -109,7 +113,8 @@ That's it - you now have your own Root Certificate. Pat yourself on the back and
 
 This is done via C++ code and is best done in, or a function called from, `main` when the application starts up. I store the certificate in PEM format and keep it in the Qt resources part of the app bundle.
 
-`// Load the certificate
+```
+// Load the certificate
 QFile file(":/cert/dummycom_root_ca.pem");
 if (!file.open(QIODevice::ReadOnly)) {
     qFatal("Could not load certificate!");
@@ -121,7 +126,8 @@ QSslConfiguration configuration = QSslConfiguration::defaultConfiguration();
 auto certs = configuration.caCertificates();
 certs.append(certificate);
 configuration.setCaCertificates(certs);
-QSslConfiguration::setDefaultConfiguration(configuration);`
+QSslConfiguration::setDefaultConfiguration(configuration);
+```
 
 That's it - you may want a more error checking or to be a little less fatalistic but that it gets the root certificate installed.
 
@@ -161,16 +167,19 @@ We use a single configuration file in 2 steps here but the second uses a differe
 
 Here is the configuration file for our server. Note the differences such as `CA:FALSE`, `subjectAlternateName` and the different key usages and extended key usages (mandatory on iOS).
 
-`[ req ]
+```
+[ req ]
 distinguished_name = req_distinguished_name
 req_extensions = v3_req
 prompt = no
+
 [ v3_req ]
 basicConstraints = critical,CA:FALSE
 keyUsage = critical,digitalSignature,keyEncipherment
 extendedKeyUsage = serverAuth
 subjectAltName = DNS:fake
 subjectKeyIdentifier = hash
+
 [ v3_aki_ext ]
 authorityKeyIdentifier = keyid:issuer
 basicConstraints = critical,CA:FALSE
@@ -178,13 +187,15 @@ keyUsage = critical,digitalSignature,keyEncipherment
 extendedKeyUsage = serverAuth
 subjectAltName = DNS:fake.com
 subjectKeyIdentifier = hash
+
 [ req_distinguished_name ]
 C = BB
 ST = COUNTYSHIRE
 L = TOWNSVILLE
 O = dummycom
 OU = net
-CN = dummy.com`
+CN = dummy.com
+```
 
 ### Sign the Server Certificate with out Root CA
 
@@ -227,7 +238,7 @@ On the server we need to place our server (fake) key, certificate and the key pa
 
 In the subfolder called `cert` are out crt (pem) file and key for the `fake.com` certificate we signed with our dummy root certificate. Remember, our app has the root certificate inside and adds this to its SSL configuration and uses this to validate the `fake.com` certificate
 
-`
+```
 // fs required to load certificates
 const fs = require('fs')
 // express used as server middleware
@@ -247,7 +258,7 @@ const app = express();
         });
 // start the server 
 https.createServer(options, app).listen(port_ssl);
-`
+```
 
 Now all you need to do is fire up the server e.g.
 
@@ -278,6 +289,8 @@ I also hope this is useful to you. It took me around 4 days to fully(!) understa
 
 Here are some instructions (run this in the `ssl` folder) to create a server certificate for `127.0.0.1`
 
-`$ openssl genrsa -des3 -passout pass:sixslimyslugs -out 127.0.0.1.key 2048
+```
+$ openssl genrsa -des3 -passout pass:sixslimyslugs -out 127.0.0.1.key 2048
 $ openssl req -new -sha256 -key 127.0.0.1.key -passin pass:sixslimyslugs -config 127.0.0.1.cnf -out 127.0.0.1.csr
-$ openssl x509 -req -in 127.0.0.1.csr -CA dummycom_root_ca.pem -CAkey dummycom_root_ca.key -CAcreateserial -extfile 127.0.0.1.cnf -passin pass:pingpongballeyes -extensions v3_aki_ext -out 127.0.0.1.crt -days 825 -sha256`
+$ openssl x509 -req -in 127.0.0.1.csr -CA dummycom_root_ca.pem -CAkey dummycom_root_ca.key -CAcreateserial -extfile 127.0.0.1.cnf -passin pass:pingpongballeyes -extensions v3_aki_ext -out 127.0.0.1.crt -days 825 -sha256
+```
