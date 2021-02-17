@@ -47,7 +47,7 @@ The Root CA is our own certificate that we will use to sign our other certificat
 
 If you're on a Mac you can export certificates from Key Chain Access and have a look at them - any x509 can be dumped using this command (this is staggering useful)
 
-`opensll x509 -in some_cert_file.pem -text`
+`openssl x509 -in some_cert_file.pem -text`
 
 ### Real World/Web Browsers
 
@@ -167,7 +167,7 @@ Generate a `Certificate Signing Request`.  This will be used int he next step
 
 We use a single configuration file in 2 steps here but the second uses a different extension (a block in the config file prefixed with [ $text ]). This is because we can't add the AKI (Authority Key Index) when we generate the signing request because the AKI is a back reference/hash to the Root Certificate we will use to sign.
 
-Here is the configuration file for our server. Note the differences such as `CA:FALSE`, `subjectAlternateName` and the different key usages and extended key usages (mandatory on iOS).
+Here is the configuration file for our server. Note the differences such as `CA:FALSE`, `subjectAlternateName` and the different key usages and extended key usages (mandatory on iOS). Note that if you're using IP addresses instead of domain names the `subjectAlternateName` would be IP:192.168.1.1 (naturally replace with the IP you're actually using).
 
 ```
 [ req ]
@@ -204,6 +204,8 @@ CN = dummy.com
 Now we can sign our server certificate. We do this using our own root certificate, root certificate key and root certificate key password…
 
 Notice the additional `-extensions v3_aki_ext`. This uses the additional section of the configuration file that tells OpenSSL to set the Authority Key Index in the generated, signed certificate. You can now see (above) that we could not have done this when generating the CSR as we did not have the RC to hand.
+
+*Important Note* the password here is the password used to create your *root* certificiate. This is what prevents others from using your root certificate to sign further certificates. TLDR:KEEP YOU ROOT PASSWORD VERY SAFE. Do not tattoo it on your forehead. Do not put it on a post-it note. Do not spray it in 6 foot high letters across the front of your house. If you write it down (recommended as it is INCREDIBLY valuable) then keep it under look and key and make no attempt to memorise it. https://imgs.xkcd.com/comics/security.png
 
 `openssl x509 -req -in fake.com.csr -CA dummycom_root_ca.pem -CAkey dummycom_root_ca.key -CAcreateserial -extfile fake.com.cnf -passin pass:pingpongballeyes -extensions v3_aki_ext -out fake.com.crt -days 825 -sha256`
 
