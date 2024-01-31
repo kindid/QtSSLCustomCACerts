@@ -267,10 +267,12 @@ const options = {
     key: fs.readFileSync('cert/fake.com.key'),
     cert: fs.readFileSync('cert/fake.com.crt'),
     passphrase: 'sixslimyslugs' }
+// make express instance
 const app = express();
-        app.get('/', (req, res) => {
-            res.json({status:'alive', alive: true})
-        });
+// respond to a get on root
+app.get('/', (req, res) => {
+    res.json({status:'alive', alive: true})
+});
 // start the server 
 https.createServer(options, app).listen(port_ssl);
 ```
