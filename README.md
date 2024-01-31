@@ -41,7 +41,7 @@ A Root Certificate is used to sign other certificates. As with all certificates 
 
 1. A key which is just a big blob of unpredictable random bits
 1. A password used to secure the key - this is known only to "us" and needn't be store on the computer much like the PIN number for a bank card or an unlock code on a phone
-1 . The certificate generated with that key - This requires the password and key (above). A configuration file is used as we will need to generate a V3 x509 certificate which has extensions over a V1 key. This is even more important when generating client keys
+1. The certificate generated with that key - This requires the password and key (above). A configuration file is used as we will need to generate a V3 x509 certificate which has extensions over a V1 key. This is even more important when generating client keys
 
 The Root CA is our own certificate that we will use to sign our other certificates. Our application only needs a copy of the our root certificate not all of the certificates that we signed with it.
 
@@ -100,6 +100,15 @@ CN = dummy.com
 ```
 
 The really, really important parts of this configuration file are `basicConstraints` and `extendedKeyUsage`. If we don't get this right then Secure Transport will *reject* your RC.
+
+`req_distinguished_name` fields mean the following
+
+* C = Country
+* ST = State
+* L = Locality
+* O = Organization
+* OU = Organization Unit (a sub division of Organization - TBH you may not have a use for all these fields)
+* CN = Common Name - Reverse domain name is probably the most useful thing to put here
 
 ### Expiration
 
@@ -161,7 +170,7 @@ Firstly generate a random, password protected, key. I create one of these per se
 
 ### Certificate Signing Request
 
-Generate a `Certificate Signing Request`.  This will be used int he next step 
+Generate a `Certificate Signing Request`.  This will be used in the next step 
 
 `openssl req -new -sha256 -key fake.com.key -passin pass:sixslimyslugs -config fake.com.cnf -out fake.com.csr`
 
@@ -199,19 +208,21 @@ OU = net
 CN = dummy.com
 ```
 
-### Sign the Server Certificate with out Root CA
+### Sign the Server Certificate with our Root CA
 
 Now we can sign our server certificate. We do this using our own root certificate, root certificate key and root certificate key password…
 
 Notice the additional `-extensions v3_aki_ext`. This uses the additional section of the configuration file that tells OpenSSL to set the Authority Key Index in the generated, signed certificate. You can now see (above) that we could not have done this when generating the CSR as we did not have the RC to hand.
 
-*Important Note* the password here is the password used to create your *root* certificiate. This is what prevents others from using your root certificate to sign further certificates. TLDR:KEEP YOU ROOT PASSWORD VERY SAFE. Do not tattoo it on your forehead. Do not put it on a post-it note. Do not spray it in 6 foot high letters across the front of your house. If you write it down (recommended as it is INCREDIBLY valuable) then keep it under look and key and make no attempt to memorise it. https://imgs.xkcd.com/comics/security.png
+*Important Note* the password here is the password used to create your *root* certificiate. This is what prevents others from using your root certificate to sign further certificates. TLDR:KEEP YOU ROOT PASSWORD VERY SAFE. Do not tattoo it on your forehead. Do not put it on a post-it note. Do not spray it in 6 foot high letters across the front of your house. If you write it down (recommended as it is INCREDIBLY valuable) then keep it under lock and key and make no attempt to memorise it. https://imgs.xkcd.com/comics/security.png
 
 `openssl x509 -req -in fake.com.csr -CA dummycom_root_ca.pem -CAkey dummycom_root_ca.key -CAcreateserial -extfile fake.com.cnf -passin pass:pingpongballeyes -extensions v3_aki_ext -out fake.com.crt -days 825 -sha256`
 
 ### Expiration & Secure Transport
 
 Secure Transport will **not** allow certificates to live for more than 825 days (about 2.25 years) so you *will* have to update your server every once in a while. In fact it is quite common for server certificates to require updating every year.
+
+*UPDATE* Rules on this recently changed. The limit is now 398 days although I am now using certificate lengths of 366 days.
 
 Note that our root certificate is very long lived so the app itself is good, in this case, for 50 years.
 
